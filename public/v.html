@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WELCOME TO MARK MONITOR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Orbitron', sans-serif;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+
+        #landing-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #db05c6, #00ffff, #ff00ff);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            animation: neonGlow 2s infinite alternate;
+        }
+
+        @keyframes neonGlow {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.5); }
+        }
+
+        #landing-page h1 {
+            color: #1206e5;
+            font-size: 48px;
+            text-shadow: 0 0 10px #ef4107, 0 0 20px #00ffff, 0 0 20px #0cd93f;
+            animation: flicker 1.5s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        #start-btn {
+            padding: 15px 30px;
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px #00ffff;
+            transition: all 0.3s;
+        }
+
+        #start-btn:hover {
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 25px #00ffff;
+        }
+
+        .container {
+            display: none;
+            width: 95%;
+            max-width: 1400px;
+            min-height: 90vh;
+            background: rgba(10, 10, 10, 0.9);
+            padding: 20px;
+            border: 2px solid #ff00ff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #ff00ff, 0 0 40px #00ffff;
+            position: relative;
+            margin: 20px auto;
+            transition: opacity 0.5s;
+        }
+
+        h2 {
+            color: #00ffff;
+            font-size: 32px;
+            text-shadow: 0 0 10px #00ffff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .drop-area {
+            border: 3px dashed #ff00ff;
+            border-radius: 10px;
+            padding: 50px;
+            text-align: center;
+            color: #fff;
+            font-size: 20px;
+            background: rgba(255, 0, 255, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .drop-area.dragover {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: #00ffff;
+            transform: scale(1.05);
+        }
+
+        .drop-area:hover {
+            box-shadow: 0 0 20px #ff00ff;
+        }
+
+        .sheet-selector {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #00ffff;
+            background: #0a0a0a;
+            color: #fff;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .sheet-selector:hover {
+            box-shadow: 0 0 15px #00ffff;
+        }
+
+        .table-container {
+            width: 100%;
+            max-height: 60vh;
+            overflow: auto;
+            border: 1px solid #ff00ff;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            box-shadow: 0 0 15px #ff00ff;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #fff;
+        }
+
+        th, td {
+            border: 1px solid #00ffff;
+            padding: 12px;
+            font-size: 16px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        th {
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            color: #000;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(255, 0, 255, 0.2);
+        }
+
+        .button-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .download-btn, #fullscreen-btn, #dark-mode-toggle {
+            padding: 12px 20px;
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px #00ffff;
+        }
+
+        .download-btn:hover, #fullscreen-btn:hover, #dark-mode-toggle:hover {
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 20px #00ffff;
+        }
+
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            max-height: 100vh;
+            z-index: 20;
+            border: none;
+            border-radius: 0;
+            margin: 0;
+            padding: 20px;
+            background: rgba(10, 10, 10, 0.95);
+            box-shadow: none;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="landing-page">
+        <h1>WELCOME TO MARK MONITOR</h1>
+        <button id="start-btn">Click ME</button>
+    </div>
+
+    <div class="container" id="main-container">
+        <h2>EAST WEST Excel Grid</h2>
+        <div class="drop-area" id="dropArea">
+            <span>Drag & Drop Excel File or Click to Upload THE EXCEL File</span>
+        </div>
+        <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;">
+        <select id="sheetSelector" class="sheet-selector" style="display: none;"></select>
+        <div class="table-container" id="tableContainer"></div>
+        <div class="button-group">
+            <button id="downloadExcel" class="download-btn">Download Excel</button>
+            <button id="downloadPDF" class="download-btn">Download PDF</button>
+            <button id="fullscreen-btn">Full Screen MODE</button>
+            <button id="dark-mode-toggle">Toggle Dark Mode</button>
+            <button id="upload-files-btn" class="download-btn">Upload Files</button>
+        </div>
+        <div id="upload-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(10, 10, 10, 0.95); padding: 20px; border: 2px solid #ff00ff; border-radius: 10px; box-shadow: 0 0 20px #ff00ff; z-index: 100;">
+            <h3 style="color: #00ffff; text-align: center;">Upload Excel File</h3>
+            <select id="upload-semester" class="sheet-selector">
+                <option value="">Select Semester</option>
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+                <option value="3">Semester 3</option>
+                <option value="4">Semester 4</option>
+                <option value="5">Semester 5</option>
+                <option value="6">Semester 6</option>
+            </select>
+            <select id="upload-year" class="sheet-selector" style="margin: 10px 0;">
+                <option value="">Select Year</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+            </select>
+            <input type="file" id="upload-excel" accept=".xlsx, .xls" style="display: block; margin: 10px auto; color: #fff;">
+            <div style="text-align: center;">
+                <button id="submit-upload" class="download-btn">Submit</button>
+                <button id="close-modal" class="download-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let workbookData = {};
+        const container = document.getElementById('main-container');
+        const landingPage = document.getElementById('landing-page');
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('excelFile');
+        const tableContainer = document.getElementById('tableContainer');
+
+        // Landing Page Transition
+        document.getElementById('start-btn').addEventListener('click', () => {
+            landingPage.style.opacity = '0';
+            setTimeout(() => {
+                landingPage.style.display = 'none';
+                container.style.display = 'block';
+                container.style.opacity = '0';
+                setTimeout(() => container.style.opacity = '1', 100);
+            }, 500);
+        });
+
+        // Drag and Drop
+        dropArea.addEventListener('click', () => fileInput.click());
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.classList.add('dragover');
+        });
+        dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            handleFileUpload(fileInput.files[0]);
+        });
+
+        fileInput.addEventListener('change', (event) => handleFileUpload(event.target.files[0]));
+
+        function handleFileUpload(file) {
+            if (!file) return;
+
+            let reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+
+            reader.onload = function(e) {
+                let data = new Uint8Array(e.target.result);
+                let workbook = XLSX.read(data, { type: 'array', cellStyles: true });
+
+                workbookData = workbook;
+                let sheetSelector = document.getElementById("sheetSelector");
+                sheetSelector.innerHTML = "";
+
+                workbook.SheetNames.forEach((sheet) => {
+                    let option = document.createElement("option");
+                    option.value = sheet;
+                    option.textContent = sheet;
+                    sheetSelector.appendChild(option);
+                });
+
+                sheetSelector.style.display = workbook.SheetNames.length > 1 ? "block" : "none";
+                loadSheet(workbook.SheetNames[0]);
+            };
+        }
+
+        function loadSheet(sheetName) {
+            let sheet = workbookData.Sheets[sheetName];
+            let range = XLSX.utils.decode_range(sheet['!ref']);
+            let table = document.createElement('table');
+
+            for (let row = range.s.r; row <= range.e.r; row++) {
+                let tr = document.createElement('tr');
+                let hasData = false;
+
+                for (let col = range.s.c; col <= range.e.c; col++) {
+                    let cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+                    let cell = sheet[cellAddress];
+                    let td = document.createElement(row === range.s.r ? 'th' : 'td');
+                    td.textContent = cell ? (cell.v !== undefined ? cell.v : '') : '';
+                    if (cell && cell.v !== undefined && cell.v !== '') {
+                        hasData = true;
+                    }
+                    tr.appendChild(td);
+                }
+
+                if (hasData) {
+                    table.appendChild(tr);
+                }
+            }
+
+            tableContainer.innerHTML = '';
+            tableContainer.appendChild(table);
+        }
+
+        document.getElementById("sheetSelector").addEventListener("change", function () {
+            loadSheet(this.value);
+        });
+
+        // Download as Excel
+        document.getElementById("downloadExcel").addEventListener("click", function () {
+            let selectedSheet = document.getElementById("sheetSelector").value;
+            let sheet = workbookData.Sheets[selectedSheet];
+            let workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, sheet, selectedSheet);
+            XLSX.writeFile(workbook, selectedSheet + ".xlsx");
+        });
+
+        // Download as PDF
+        document.getElementById("downloadPDF").addEventListener("click", function () {
+            const { jsPDF } = window.jspdf;
+            let doc = new jsPDF('p', 'mm', 'a4');
+            html2canvas(tableContainer).then(canvas => {
+                let imgData = canvas.toDataURL('image/png');
+                let imgWidth = 190;
+                let imgHeight = (canvas.height * imgWidth) / canvas.width;
+                doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                doc.save('table.pdf');
+            });
+        });
+
+        // Fullscreen Toggle
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                tableContainer.classList.add('fullscreen');
+                tableContainer.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                tableContainer.classList.remove('fullscreen');
+                tableContainer.style.width = '100%';
+                tableContainer.style.maxHeight = '60vh';
+                tableContainer.style.position = 'relative';
+                tableContainer.style.padding = '0';
+                tableContainer.style.background = 'rgba(255, 255, 255, 0.05)';
+                tableContainer.style.border = '1px solid #ff00ff';
+                tableContainer.style.borderRadius = '5px';
+                tableContainer.style.boxShadow = '0 0 15px #ff00ff';
+            }
+        });
+
+        // Dark Mode Toggle
+        document.getElementById('dark-mode-toggle').addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            if (document.body.classList.contains('light-mode')) {
+                document.body.style.background = '#fff';
+                container.style.background = 'rgba(255, 255, 255, 0.9)';
+                container.style.borderColor = '#000';
+                container.style.boxShadow = '0 0 20px #000';
+            } else {
+                document.body.style.background = '#0a0a0a';
+                container.style.background = 'rgba(10, 10, 10, 0.9)';
+                container.style.borderColor = '#ff00ff';
+                container.style.boxShadow = '0 0 20px #ff00ff, 0 0 40px #00ffff';
+            }
+        });
+
+        // Upload Files Feature
+        const uploadBtn = document.getElementById('upload-files-btn');
+        const uploadModal = document.getElementById('upload-modal');
+        const submitUpload = document.getElementById('submit-upload');
+        const closeModal = document.getElementById('close-modal');
+        const uploadExcel = document.getElementById('upload-excel');
+        const uploadSemester = document.getElementById('upload-semester');
+        const uploadYear = document.getElementById('upload-year');
+
+        uploadBtn.addEventListener('click', () => {
+            uploadModal.style.display = 'block';
+        });
+
+        closeModal.addEventListener('click', () => {
+            uploadModal.style.display = 'none';
+            uploadExcel.value = '';
+            uploadSemester.value = '';
+            uploadYear.value = '';
+        });
+
+        submitUpload.addEventListener('click', () => {
+            const file = uploadExcel.files[0];
+            const semester = uploadSemester.value;
+            const year = uploadYear.value;
+
+            if (!file || !semester || !year) {
+                alert('Please select a file, semester, and year.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array', cellStyles: true });
+                const fileData = {
+                    name: file.name,
+                    semester: semester,
+                    year: year,
+                    sheets: workbook.SheetNames,
+                    data: Array.from(data) // Convert Uint8Array to regular array for JSON storage
+                };
+
+                let storedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
+                storedFiles.push(fileData);
+                localStorage.setItem('uploadedFiles', JSON.stringify(storedFiles));
+
+                alert('File uploaded successfully!');
+                uploadModal.style.display = 'none';
+                uploadExcel.value = '';
+                uploadSemester.value = '';
+                uploadYear.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+</body>
+</html>
